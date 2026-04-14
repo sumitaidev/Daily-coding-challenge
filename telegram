@@ -1,0 +1,56 @@
+function doPost(e) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Submissions");
+  
+  // Parse incoming JSON data from external HTML
+  const data = JSON.parse(e.postData.contents);
+  
+  // Generate Unique Form ID
+  const formId = "ID-" + new Date().getTime().toString().slice(-5) + Math.random().toString(36).substring(2, 5).toUpperCase();
+  
+  try {
+    // 1. Append data to Google Sheet
+    sheet.appendRow([
+      new Date(), 
+      formId, 
+      data.userName, 
+      data.userEmail, 
+      data.knowledgeArea
+    ]);
+    
+    // 2. Send Confirmation Email to USER (counts toward 100 limit)
+    MailApp.sendEmail({
+      to: data.userEmail,
+      subject: "Your Unique Form ID: " + formId,
+      body: `Hi ${data.userName},\n\nThank you for submitting the survey. Your unique ID is ${formId}.`
+    });
+    
+    // 3. Send Telegram Notification to YOU (Unlimited/No quota issues)
+    sendTelegramAlert(data.userName, data.userEmail, data.knowledgeArea, formId);
+
+    return ContentService.createTextOutput(JSON.stringify({ "result": "success", "formId": formId }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ "result": "error", "error": error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Helper function to send Telegram alerts
+ */
+function sendTelegramAlert(name, email, area, id) {
+  const botToken = "8575712816:AAHcXyx2CxAr93w2rVYmTuCZOHEswbXObKs"; // Paste your bot token from @BotFather
+  const chatId = "8088895411";     // Paste your Chat ID from @userinfobot
+  
+  const message = `🚀 *New Gyanloop Submission!*%0A%0A` +
+                  `*Name:* ${name}%0A` +
+                  `*Email:* ${email}%0A` +
+                  `*Area:* ${area}%0A` +
+                  `*Form ID:* ${id}`;
+  
+  const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${message}&parse_mode=Markdown`;
+  
+  UrlFetchApp.fetch(url);
+}
