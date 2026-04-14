@@ -41,8 +41,8 @@ function doPost(e) {
  * Helper function to send Telegram alerts
  */
 function sendTelegramAlert(name, email, area, id) {
-  const botToken = "8575712816:AAHcXyx2CxAr93w2rVYmTuCZOHEswbXObKs"; // Paste your bot token from @BotFather
-  const chatId = "8088895411";     // Paste your Chat ID from @userinfobot
+  const botToken = "***************"; // Paste your bot token from @BotFather
+  const chatId = "80********";     // Paste your Chat ID from @userinfobot
   
   const message = `🚀 *New Gyanloop Submission!*%0A%0A` +
                   `*Name:* ${name}%0A` +
