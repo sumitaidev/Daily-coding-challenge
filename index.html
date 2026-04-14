@@ -53,14 +53,19 @@
         })
         .then(res => res.json())
         .then(data => {
-            if(data.result === "success") {
-                msg.style.color = "green";
-                msg.innerHTML = `Success! Your Form ID  has been sent to your email.`;
-                document.getElementById('externalForm').reset();
-            } else {
-                throw new Error(data.error);
-            }
-        })
+    if(data.result === "success") {
+        msg.style.color = "green";
+        msg.innerHTML = `
+            <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                <p>✅ <b>Success! ID: ${data.formId}</b></p>
+                <a href="https://t.me/form002bot?start=${data.formId}" target="_blank" 
+                   style="display: block; background: #0088cc; color: white; padding: 10px; text-decoration: none; border-radius: 5px; text-align:center;">
+                   Save ID to Telegram
+                </a>
+            </div>`;
+        document.getElementById('externalForm').reset();
+    }
+})
         .catch(err => {
             msg.style.color = "red";
             msg.innerText = "Error: " + err.message;
