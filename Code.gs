@@ -1,92 +1,69 @@
-function doPost(e) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("Submissions");
+function sendDailyLeetCodeEmail() {
+  // 1. Fetch the daily problem, including the "content" (description & examples)
+  var url = "https://leetcode.com/graphql";
+  var query = `
+    query questionOfToday {
+      activeDailyCodingChallengeQuestion {
+        link
+        question {
+          title
+          difficulty
+          content
+        }
+      }
+    }
+  `;
+
+  var options = {
+    'method': 'post',
+    'contentType': 'application/json',
+    'payload': JSON.stringify({ "query": query })
+  };
+
+  var response = UrlFetchApp.fetch(url, options);
+  var data = JSON.parse(response.getContentText());
+  var challenge = data.data.activeDailyCodingChallengeQuestion;
+
+  var title = challenge.question.title;
+  var difficulty = challenge.question.difficulty;
+  var content = challenge.question.content; // Contains HTML description and examples
+  var link = "https://leetcode.com" + challenge.link;
+
+  // 2. Configure the email
+  var targetEmail = "YOUR_EMAIL@gmail.com"; 
+  var subject = "Daily Coding Challenge: " + title;
   
-  // Parse the incoming JSON data
-  const data = JSON.parse(e.postData.contents);
-  
-  // Generate Unique Form ID
-  const formId = "ID-" + new Date().getTime().toString().slice(-5) + Math.random().toString(36).substring(2, 5).toUpperCase();
-  
-  try {
-    // Append to Sheet
-    sheet.appendRow([
-      new Date(), 
-      formId, 
-      data.userName, 
-      data.userEmail, 
-      data.knowledgeArea
-    ]);
-    
-    // 1. Send Confirmation to User
-   // Define your links
-    const courseUrl = "https://gyanloop.com/latest-course"; // Replace with your actual course link
-    const youtubeVideoUrl = "https://www.youtube.com/watch?v=Vxw0nE1qfZc"; // Replace with your video link
-    const videoThumbnail = "https://img.youtube.com/vi/Vxw0nE1qfZc/maxresdefault.jpg"; // Replace YOUR_VIDEO_ID
-
-    const htmlBody = `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
-        <h2 style="color: #007bff; text-align: center;">Submission Confirmed!</h2>
-        <p>Hi <b>${data.userName}</b>,</p>
-        <p>Thank you for participating in our <b>Knowledge Assessment Survey</b>. Your contribution helps us shape the future of technical education at Gyanloop.</p>
-        
-        <div style="background-color: #f8f9fa; padding: 15px; border-left: 5px solid #007bff; margin: 20px 0; text-align: center;">
-          <span style="font-size: 1.1em;">Your Unique ID:</span><br>
-          <strong style="font-size: 1.5em; color: #007bff;">${formId}</strong>
+  var htmlBody = `
+    <html>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 20px; background-color: #f4f4f4;">
+        <div style="max-width: 600px; margin: auto; background-color: #ffffff; border: 1px solid #ddd; padding: 30px; border-radius: 8px;">
+            <h2 style="color: #333; text-align: center; margin-bottom: 5px;">${title}</h2>
+            <p style="color: #666; font-size: 15px; text-align: center; margin-top: 0;"><strong>Difficulty:</strong> ${difficulty}</p>
+            
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+            
+            <!-- Problem Description & Examples from LeetCode -->
+            <div style="color: #222; font-size: 15px; line-height: 1.6;">
+                ${content}
+            </div>
+            
+            <br>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="${link}" 
+                   style="background-color: #ffa116; color: #000000; padding: 12px 24px; 
+                          text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; display: inline-block;">
+                   Solve on LeetCode
+                </a>
+            </div>
         </div>
+      </body>
+    </html>
+  `;
 
-        <hr style="border: 0; border-top: 1px solid #eee;">
-
-        <div style="text-align: center; padding: 10px 0;">
-          <h3 style="margin-bottom: 10px;">Ready to Level Up?</h3>
-          <p>Don't miss out on our latest <b>AI & Data Science Masterclass</b>. Registration is now open!</p>
-          <a href="${courseUrl}" style="background-color: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Register for Latest Course</a>
-        </div>
-
-        <div style="text-align: center; margin-top: 25px;">
-          <p><b>Check out our latest tutorial:</b></p>
-          <a href="${youtubeVideoUrl}">
-            <img src="${videoThumbnail}" alt="Watch Video" style="width: 100%; max-width: 400px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
-          </a>
-        </div>
-
-        <hr style="border: 0; border-top: 1px solid #eee; margin-top: 30px;">
-
-        <div style="text-align: center; padding-top: 10px;">
-          <p style="margin-bottom: 15px; font-weight: bold;">Follow us for more updates:</p>
-          <a href="https://linkedin.com/in/yourprofile"><img src="https://cdn-icons-png.flaticon.com/32/145/145807.png" width="32" style="margin: 0 10px;"></a>
-          <a href="https://github.com/yourusername"><img src="https://cdn-icons-png.flaticon.com/32/733/733553.png" width="32" style="margin: 0 10px;"></a>
-          <a href="https://youtube.com/yourchannel"><img src="https://cdn-icons-png.flaticon.com/32/1384/1384060.png" width="32" style="margin: 0 10px;"></a>
-          <a href="https://twitter.com/yourhandle"><img src="https://cdn-icons-png.flaticon.com/32/733/733579.png" width="32" style="margin: 0 10px;"></a>
-        </div>
-
-        <p style="font-size: 0.8em; color: #777; text-align: center; margin-top: 30px;">
-          Best regards,<br><b>The Gyanloop Team</b>
-        </p>
-      </div>
-    `;
-
-    MailApp.sendEmail({
-      to: data.userEmail,
-      subject: "Survey Confirmation & Next Steps - ID: " + formId,
-      htmlBody: htmlBody
-    });
-    
-    // 2. Send Notification to YOU (Hardcoded to avoid "no recipient" error)
-    // Replace 'your-email@gmail.com' with your actual email address
-    const myEmail = "hello.sumithaldar@gmail.com"; 
-    
-    MailApp.sendEmail({
-      to: myEmail,
-      subject: "New Survey Entry: " + data.userName,
-      body: `You received a new response.\n\nName: ${data.userName}\nEmail: ${data.userEmail}\nKnowledge: ${data.knowledgeArea}\nForm ID: ${formId}`
-    });
-
-    return ContentService.createTextOutput(JSON.stringify({ "result": "success", "formId": formId }))
-      .setMimeType(ContentService.MimeType.JSON);
-      
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ "result": "error", "error": error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
+  // 3. Send the email
+  MailApp.sendEmail({
+    to: targetEmail,
+    subject: subject,
+    htmlBody: htmlBody
+  });
 }
